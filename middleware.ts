@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-// Define protected routes
 const isProtectedRoute = createRouteMatcher([
   "/onboarding(.*)",
   "/organisation(.*)",
@@ -9,18 +9,30 @@ const isProtectedRoute = createRouteMatcher([
   "/sprint(.*)",
 ]);
 
-// Middleware logic
-export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) await auth.protect()
-})
+export default clerkMiddleware(async (auth, req: NextRequest) => {
+  const { userId, orgId, redirectToSignIn } = await auth();
 
+  if (!userId && isProtectedRoute(req)) {
+    return redirectToSignIn();
+  }
 
-// Matcher configuration
+  if (
+    userId &&
+    !orgId &&
+    req.nextUrl.pathname !== "/onboarding" &&
+    req.nextUrl.pathname !== "/"
+  ) {
+    return NextResponse.redirect(new URL("/onboarding", req.url));
+  }
+
+  return NextResponse.next(); // Always return a response
+});
+
 export const config = {
   matcher: [
-    // Skip Next.js internals and static files, unless explicitly matched
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always include API routes
-    '/(api|trpc)(.*)',
+    // Skip Next.js internals and all static files, unless found in search params
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for API routes
+    "/(api|trpc)(.*)",
   ],
 };
