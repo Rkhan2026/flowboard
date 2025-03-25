@@ -17,7 +17,7 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
   return (
     <ClerkProvider>
     <html lang="en" suppressHydrationWarning>
-      <body className={`antialiased`}>
+      <body className={`antialiased animated-dotted-background`} >
          <ThemeProvider attribute="class"
             defaultTheme="system"
             enableSystem
