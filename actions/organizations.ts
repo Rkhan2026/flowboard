@@ -42,3 +42,25 @@ export async function getOrganization(slug: string): Promise<Organization | null
 
   return organization;
 }
+
+export async function getProjects(orgId:string) {
+    const { userId } = await auth();
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const projects = await db.project.findMany({
+      where: { organizationId: orgId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return projects;
+}
