@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+    
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "actions/organizations.js", "middleware.js", "next.config.mjs", "lib/checkUser.js", "components/ui/textarea.jsx", "components/ui/tabs.jsx", "components/ui/sonner.jsx", "components/ui/select.jsx", "components/ui/popover.jsx", "components/ui/input.jsx", "components/ui/drawer.jsx", "components/ui/dialog.jsx", "components/ui/carousel.jsx", "components/ui/card.jsx", "components/ui/button.jsx", "components/ui/badge.jsx", "components/ui/avatar.jsx", "components/ui/accordion.jsx", "components/header.jsx", "components/org-switcher.jsx", "components/theme-provider.jsx", "components/user-loading.jsx", "components/user-menu.js", "hooks/use-fetch.js", "lib/utils.js", "lib/prisma.js", "actions/projects.js", "app/layout.js", "app/not-found.jsx", "app/page.jsx", "app/lib/validators.js", "app/(auth)/layout.js", "app/(auth)/sign-in/[[...sign-in]]/page.jsx", "app/(auth)/sign-up/[[...sign-up]]/page.jsx", "app/(main)/layout.jsx", "app/(main)/organization/[orgId]/_components/delete-project.jsx", "app/(main)/organization/[orgId]/_components/project-list.jsx", "app/(main)/organization/[orgId]/page.jsx", "app/(main)/onboarding/[[...onboarding]]/page.jsx", "app/(main)/project/create/page.jsx", "app/(main)/project/[projectId]/layout.jsx", "app/(main)/project/[projectId]/page.jsx"],
+  "exclude": ["node_modules"]
+}

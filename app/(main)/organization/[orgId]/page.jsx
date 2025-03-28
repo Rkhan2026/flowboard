@@ -1,0 +1,34 @@
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { getOrganization } from "@/actions/organizations";
+import OrgSwitcher from "@/components/org-switcher";
+import ProjectList from "./_components/project-list";
+
+export default async function OrganizationPage({ params }) {
+  const { orgId } = await params;
+  const { userId } = await auth();
+
+  if (!userId) {
+    redirect("/sign-in");
+  }
+
+  const Organization = await getOrganization(orgId);
+
+  if (!Organization) {
+    return <div>Organization not found</div>;
+  }
+
+  return (
+    <div className="container mx-auto px-4">
+      <div className="mb-4 flex flex-col sm:flex-row justify-between items-start">
+        <h1 className="text-5xl font-bold gradient-title pb-2">
+          {Organization.name}&rsquo;s Projects
+        </h1>
+        <OrgSwitcher />
+      </div>
+      <div className="mb-4">
+        <ProjectList orgId={Organization.id} />
+      </div>
+    </div>
+  );
+}
