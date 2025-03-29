@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getOrganization } from "@/actions/organizations";
 import OrgSwitcher from "@/components/org-switcher";
 import ProjectList from "./_components/project-list";
+import UserIssues from "./_components/user-issues";
 
 export default async function OrganizationPage({ params }) {
   const { orgId } = await params;
@@ -28,6 +29,9 @@ export default async function OrganizationPage({ params }) {
       </div>
       <div className="mb-4">
         <ProjectList orgId={Organization.id} />
+      </div>
+      <div className="mt-8">
+        <UserIssues userId={userId} />
       </div>
     </div>
   );
