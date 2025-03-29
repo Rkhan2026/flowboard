@@ -1,22 +1,36 @@
+/**
+ * app/page.js
+ *
+ * Purpose:
+ * This is the main landing page for the app.
+ * It includes:
+ * - A hero section with a headline, logo, call-to-action buttons
+ * - A features section showcasing the core benefits of the product
+ * 
+ * This is a static page rendered on the client.
+ */
+
 import React from "react";
 import Link from "next/link";
 import {
-  ChevronRight,
-  Layout,
-  Calendar,
-  BarChart,
-  ArrowRight,
+  ChevronRight, // Icon for button arrow
+  Layout,       // Icon for Kanban boards
+  Calendar,     // Icon for sprint planning
+  BarChart,     // Icon for reports
+  ArrowRight,   // (Unused here, can be removed)
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+
+import { Button } from "@/components/ui/button"; // Custom button component
+import { Card, CardContent } from "@/components/ui/card"; // Card layout components
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import Image from "next/image";
+} from "@/components/ui/accordion"; // (Accordion is imported but not used in this file)
+import Image from "next/image"; // Optimized image component
 
+// Feature list data
 const features = [
   {
     title: "Intuitive Kanban Boards",
@@ -38,17 +52,19 @@ const features = [
   },
 ];
 
+// Main component for the homepage
 export default function Home() {
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
+      
+      {/* ----------------- Hero Section ----------------- */}
       <section className="container mx-auto py-20 text-center">
         <h1 className="text-6xl sm:text-7xl lg:text-8xl font-extrabold gradient-title pb-6 flex flex-col">
           Streamline Your Workflow <br />
           <span className="flex mx-auto gap-3 sm:gap-4 items-center">
             with
             <Image
-              src={"/logo2.png"}
+              src={"/logo2.png"} // App logo
               alt="FlowBoard Logo"
               width={400}
               height={80}
@@ -56,15 +72,18 @@ export default function Home() {
             />
           </span>
         </h1>
+
         <p className="text-xl text-gray-300 mb-10 max-w-3xl mx-auto">
           Empower your team with my project management solution.
         </p>
-        <p className="text-xl mb-12 max-w-2xl mx-auto"></p>
+
+        {/* Call to action buttons */}
         <Link href="/onboarding">
           <Button size="lg" className="mr-4">
             Get Started <ChevronRight size={18} className="ml-1" />
           </Button>
         </Link>
+
         <Link href="#features">
           <Button size="lg" variant="outline">
             Learn More
@@ -72,10 +91,14 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* Features Section */}
+      {/* ----------------- Features Section ----------------- */}
       <section id="features" className="bg-gray-900 py-20 px-5">
         <div className="container mx-auto">
-          <h3 className="text-3xl text-white font-bold mb-12 text-center">Key Features</h3>
+          <h3 className="text-3xl text-white font-bold mb-12 text-center">
+            Key Features
+          </h3>
+
+          {/* Grid of feature cards */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <Card key={index} className="bg-gray-800">

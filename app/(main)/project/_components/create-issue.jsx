@@ -1,9 +1,22 @@
-"use client";
+"use client"; 
+// Required for using React hooks and interactivity in this component
+
+/**
+ * components/IssueCreationDrawer.js
+ *
+ * Purpose:
+ * This drawer UI allows users to create a new issue within a sprint.
+ * - Uses react-hook-form + zod for form state and validation
+ * - Allows choosing assignee, priority, and markdown description
+ * - Fetches organization users dynamically
+ * - Submits issue creation via server action
+ */
 
 import { useEffect } from "react";
 import { BarLoader } from "react-spinners";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
   Drawer,
   DrawerContent,
@@ -19,21 +32,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import MDEditor from "@uiw/react-md-editor";
+
+import MDEditor from "@uiw/react-md-editor"; // Markdown editor
+
 import useFetch from "@/hooks/use-fetch";
 import { createIssue } from "@/actions/issues";
 import { getOrganizationUsers } from "@/actions/organizations";
 import { issueSchema } from "@/app/lib/validators";
 
 export default function IssueCreationDrawer({
-  isOpen,
-  onClose,
-  sprintId,
-  status,
-  projectId,
-  onIssueCreated,
-  orgId,
+  isOpen,           // Whether the drawer is open
+  onClose,          // Close handler
+  sprintId,         // Sprint ID to attach the issue to
+  status,           // Initial status (TODO, IN_PROGRESS, etc.)
+  projectId,        // Project ID the issue belongs to
+  onIssueCreated,   // Callback to refresh UI after creation
+  orgId,            // Organization ID to fetch users
 }) {
+  // Create Issue async handler
   const {
     loading: createIssueLoading,
     fn: createIssueFn,
@@ -41,12 +57,14 @@ export default function IssueCreationDrawer({
     data: newIssue,
   } = useFetch(createIssue);
 
+  // Fetch org users for assignee dropdown
   const {
     loading: usersLoading,
     fn: fetchUsers,
     data: users,
   } = useFetch(getOrganizationUsers);
 
+  // Setup react-hook-form with zod validation
   const {
     control,
     register,
@@ -62,12 +80,14 @@ export default function IssueCreationDrawer({
     },
   });
 
+  // Fetch users when drawer opens
   useEffect(() => {
     if (isOpen && orgId) {
       fetchUsers(orgId);
     }
   }, [isOpen, orgId]);
 
+  // Handle form submission
   const onSubmit = async (data) => {
     await createIssueFn(projectId, {
       ...data,
@@ -76,13 +96,13 @@ export default function IssueCreationDrawer({
     });
   };
 
+  // On successful creation: reset form, close drawer, refresh parent
   useEffect(() => {
     if (newIssue) {
       reset();
       onClose();
       onIssueCreated();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newIssue, createIssueLoading]);
 
   return (
@@ -91,8 +111,12 @@ export default function IssueCreationDrawer({
         <DrawerHeader>
           <DrawerTitle>Create New Issue</DrawerTitle>
         </DrawerHeader>
+
+        {/* Show loading bar while users are loading */}
         {usersLoading && <BarLoader width={"100%"} color="#36d7b7" />}
+
         <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
+          {/* Title Input */}
           <div>
             <label htmlFor="title" className="block text-sm font-medium mb-1">
               Title
@@ -105,21 +129,16 @@ export default function IssueCreationDrawer({
             )}
           </div>
 
+          {/* Assignee Dropdown */}
           <div>
-            <label
-              htmlFor="assigneeId"
-              className="block text-sm font-medium mb-1"
-            >
+            <label htmlFor="assigneeId" className="block text-sm font-medium mb-1">
               Assignee
             </label>
             <Controller
               name="assigneeId"
               control={control}
               render={({ field }) => (
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select assignee" />
                   </SelectTrigger>
@@ -140,11 +159,9 @@ export default function IssueCreationDrawer({
             )}
           </div>
 
+          {/* Description (Markdown) */}
           <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium mb-1"
-            >
+            <label htmlFor="description" className="block text-sm font-medium mb-1">
               Description
             </label>
             <Controller
@@ -156,21 +173,16 @@ export default function IssueCreationDrawer({
             />
           </div>
 
+          {/* Priority Dropdown */}
           <div>
-            <label
-              htmlFor="priority"
-              className="block text-sm font-medium mb-1"
-            >
+            <label htmlFor="priority" className="block text-sm font-medium mb-1">
               Priority
             </label>
             <Controller
               name="priority"
               control={control}
               render={({ field }) => (
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
@@ -185,7 +197,10 @@ export default function IssueCreationDrawer({
             />
           </div>
 
+          {/* Error Message */}
           {error && <p className="text-red-500 mt-2">{error.message}</p>}
+
+          {/* Submit Button */}
           <Button
             type="submit"
             disabled={createIssueLoading}

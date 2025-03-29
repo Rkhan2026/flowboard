@@ -1,7 +1,18 @@
-"use client";
+"use client"; 
+// Marked as a client component because it uses React state, effects, and event handlers
+
+/**
+ * components/SprintCreationForm.js
+ *
+ * Purpose:
+ * - Allows org admins to create a new sprint inside a project
+ * - Uses react-hook-form + zod for validation
+ * - Sprint name is auto-generated (e.g., PROJ-1)
+ * - Includes a calendar-based date range picker using react-day-picker
+ * - Submits form and refreshes page to show updated sprint board
+ */
 
 import { useState } from "react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,9 +29,9 @@ import { CalendarIcon } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import { format, addDays } from "date-fns";
 
-import { sprintSchema } from "@/app/lib/validators";
+import { sprintSchema } from "@/app/lib/validators"; // Validation schema for sprint
 import useFetch from "@/hooks/use-fetch";
-import { createSprint } from "@/actions/sprints";
+import { createSprint } from "@/actions/sprints"; // Server action to create sprint
 
 export default function SprintCreationForm({
   projectTitle,
@@ -28,16 +39,20 @@ export default function SprintCreationForm({
   projectId,
   sprintKey,
 }) {
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(false); // Toggle form visibility
+
+  // Default sprint duration is today to 14 days later
   const [dateRange, setDateRange] = useState({
     from: new Date(),
     to: addDays(new Date(), 14),
   });
+
   const router = useRouter();
 
-  const { loading: createSprintLoading, fn: createSprintFn } =
-    useFetch(createSprint);
+  // Handle async request
+  const { loading: createSprintLoading, fn: createSprintFn } = useFetch(createSprint);
 
+  // Initialize react-hook-form with default values and validation
   const {
     register,
     control,
@@ -52,18 +67,20 @@ export default function SprintCreationForm({
     },
   });
 
+  // On form submit: create sprint and refresh the page
   const onSubmit = async (data) => {
     await createSprintFn(projectId, {
       ...data,
       startDate: dateRange.from,
       endDate: dateRange.to,
     });
-    setShowForm(false);
-    router.refresh(); // Refresh the page to show updated data
+    setShowForm(false); // Close form on success
+    router.refresh(); // Refresh page to load new sprint data
   };
 
   return (
     <>
+      {/* Header row: project title and toggle button */}
       <div className="flex justify-between">
         <h1 className="text-5xl font-bold mb-8 gradient-title">
           {projectTitle}
@@ -76,6 +93,8 @@ export default function SprintCreationForm({
           {!showForm ? "Create New Sprint" : "Cancel"}
         </Button>
       </div>
+
+      {/* Form area */}
       {showForm && (
         <Card className="pt-4 bg-black mb-4">
           <CardContent>
@@ -83,11 +102,9 @@ export default function SprintCreationForm({
               onSubmit={handleSubmit(onSubmit)}
               className="flex gap-4 items-end"
             >
-              <div className=" flex-1">
-                <label
-                  htmlFor="name"
-                  className="block text-sm text-white font-medium mb-1"
-                >
+              {/* Sprint name input (readonly auto-generated) */}
+              <div className="flex-1">
+                <label htmlFor="name" className="block text-sm text-white font-medium mb-1">
                   Sprint Name
                 </label>
                 <Input
@@ -102,6 +119,8 @@ export default function SprintCreationForm({
                   </p>
                 )}
               </div>
+
+              {/* Sprint date range picker */}
               <div className="flex-1">
                 <label className="block text-sm text-white font-medium mb-1">
                   Sprint Duration
@@ -114,24 +133,19 @@ export default function SprintCreationForm({
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
-                          className={`w-full  justify-start text-left font-normal ${
+                          className={`w-full justify-start text-left font-normal ${
                             !dateRange && "text-muted-foreground"
                           }`}
                         >
-                          <CalendarIcon className="mr-2  h-4 w-4" />
+                          <CalendarIcon className="mr-2 h-4 w-4" />
                           {dateRange.from && dateRange.to ? (
-                            format(dateRange.from, "LLL dd, y") +
-                            " - " +
-                            format(dateRange.to, "LLL dd, y")
+                            `${format(dateRange.from, "LLL dd, y")} - ${format(dateRange.to, "LLL dd, y")}`
                           ) : (
                             <span>Pick a date</span>
                           )}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent
-                        className="w-auto"
-                        align="start"
-                      >
+                      <PopoverContent className="w-auto" align="start">
                         <DayPicker
                           classNames={{
                             chevron: "fill-blue-500",
@@ -142,12 +156,12 @@ export default function SprintCreationForm({
                             today: "border-2 border-blue-700",
                           }}
                           mode="range"
-                          disabled={[{ before: new Date() }]}
+                          disabled={[{ before: new Date() }]} // Prevent past dates
                           selected={dateRange}
                           onSelect={(range) => {
                             if (range?.from && range?.to) {
                               setDateRange(range);
-                              field.onChange(range);
+                              field.onChange(range); // Sync with form state
                             }
                           }}
                         />
@@ -156,7 +170,13 @@ export default function SprintCreationForm({
                   )}
                 />
               </div>
-              <Button className="bg-white text-black hover:bg-green-700 hover:text-white" type="submit" disabled={createSprintLoading}>
+
+              {/* Submit button */}
+              <Button
+                className="bg-white text-black hover:bg-green-700 hover:text-white"
+                type="submit"
+                disabled={createSprintLoading}
+              >
                 {createSprintLoading ? "Creating..." : "Create Sprint"}
               </Button>
             </form>

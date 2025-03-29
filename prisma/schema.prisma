@@ -1,8 +1,8 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// This is your Prisma schema file
+// Docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// If you're running into performance issues or want better scalability,
+// check out Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client-js"
@@ -10,68 +10,76 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL") // Uses DATABASE_URL from your .env file
 }
 
+//
+// Models
+//
+
 model User {
-  id            String    @id @default(cuid())
-  clerkUserId   String    @unique
-  email         String    @unique
-  name          String?
-  imageUrl      String?
-  createdIssues Issue[]   @relation("Reporter")
-  assignedIssues Issue[]  @relation("Assignee")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String     @id @default(cuid()) // Auto-generated unique ID
+  clerkUserId    String     @unique              // Clerk user ID (from authentication)
+  email          String     @unique              // User's email
+  name           String?                          // Optional name
+  imageUrl       String?                          // Optional profile image
+  createdIssues  Issue[]    @relation("Reporter") // Issues created by the user
+  assignedIssues Issue[]    @relation("Assignee") // Issues assigned to the user
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 }
 
 model Project {
-  id             String   @id @default(cuid())
-  name           String
-  key            String
-  description    String?
-  organizationId String    // This will store the Clerk organization ID
-  sprints        Sprint[]
-  issues         Issue[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id             String    @id @default(cuid())
+  name           String                           // Project name
+  key            String                           // Short key used for issue prefixes (e.g., PROJ-1)
+  description    String?                          // Optional description
+  organizationId String                           // Clerk org ID to associate project with an org
+  sprints        Sprint[]                         // Sprints under this project
+  issues         Issue[]                          // Issues under this project
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  @@unique([organizationId, key])
+  @@unique([organizationId, key]) // Ensures project keys are unique per organization
 }
 
 model Sprint {
-  id        String   @id @default(cuid())
-  name      String   @unique
+  id        String       @id @default(cuid())
+  name      String       @unique               // Sprint name (must be unique globally)
   startDate DateTime
   endDate   DateTime
-  status    SprintStatus @default(PLANNED)
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status    SprintStatus @default(PLANNED)     // Enum: PLANNED, ACTIVE, COMPLETED
+  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String
-  issues    Issue[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  issues    Issue[]                             // Issues included in this sprint
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 }
 
 model Issue {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  status      IssueStatus
-  order       Int        // This will store the order within its status column
-  priority    IssuePriority
-  assignee    User?      @relation("Assignee", fields: [assigneeId], references: [id])
+  id          String         @id @default(cuid())
+  title       String                               // Issue title
+  description String?                              // Optional description
+  status      IssueStatus                          // Enum: TODO, IN_PROGRESS, etc.
+  order       Int                                  // Used to sort within a status column
+  priority    IssuePriority                        // Enum: LOW, MEDIUM, HIGH, URGENT
+  assignee    User?        @relation("Assignee", fields: [assigneeId], references: [id])
   assigneeId  String?
-  reporter    User       @relation("Reporter", fields: [reporterId], references: [id])
+  reporter    User         @relation("Reporter", fields: [reporterId], references: [id])
   reporterId  String
-  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId   String
-  sprint      Sprint?    @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+  sprint      Sprint?      @relation(fields: [sprintId], references: [id], onDelete: SetNull)
   sprintId    String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
-  @@index([status, order])
+  @@index([status, order]) // Helps with efficient ordering inside Kanban columns
 }
+
+//
+// Enums
+//
 
 enum SprintStatus {
   PLANNED

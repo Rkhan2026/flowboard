@@ -1,4 +1,15 @@
-"use client";
+"use client"; 
+// Client component using state, effects, and drag-drop interactivity
+
+/**
+ * components/SprintBoard.js
+ *
+ * Purpose:
+ * - Displays a sprint-based Kanban board
+ * - Allows drag-and-drop reordering of issues by status
+ * - Supports sprint switching and status updates (start/end)
+ * - Integrates issue creation, filtering, and status-specific UI
+ */
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -16,22 +27,24 @@ import IssueCreationDrawer from "./create-issue";
 import IssueCard from "@/components/issue-card";
 import BoardFilters from "./board-filters";
 
+// Reorder helper for drag-and-drop within the same column
 function reorder(list, startIndex, endIndex) {
   const result = Array.from(list);
   const [removed] = result.splice(startIndex, 1);
   result.splice(endIndex, 0, removed);
-
   return result;
 }
 
 export default function SprintBoard({ sprints, projectId, orgId }) {
+  // Set current sprint (active sprint or fallback to first)
   const [currentSprint, setCurrentSprint] = useState(
     sprints.find((spr) => spr.status === "ACTIVE") || sprints[0]
   );
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false); // For issue creation
+  const [selectedStatus, setSelectedStatus] = useState(null); // Status for new issue
 
+  // Fetch issues for the selected sprint
   const {
     loading: issuesLoading,
     error: issuesError,
@@ -42,26 +55,30 @@ export default function SprintBoard({ sprints, projectId, orgId }) {
 
   const [filteredIssues, setFilteredIssues] = useState(issues);
 
+  // Apply filters (e.g., by priority, assignee, etc.)
   const handleFilterChange = (newFilteredIssues) => {
     setFilteredIssues(newFilteredIssues);
   };
 
+  // Fetch issues when sprint changes
   useEffect(() => {
     if (currentSprint.id) {
       fetchIssues(currentSprint.id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSprint.id]);
 
+  // Open drawer to create new issue
   const handleAddIssue = (status) => {
     setSelectedStatus(status);
     setIsDrawerOpen(true);
   };
 
+  // After issue is created, refetch issues
   const handleIssueCreated = () => {
     fetchIssues(currentSprint.id);
   };
 
+  // Handle updating issue order on drag-and-drop
   const {
     fn: updateIssueOrderFn,
     loading: updateIssuesLoading,
@@ -73,16 +90,17 @@ export default function SprintBoard({ sprints, projectId, orgId }) {
       toast.warning("Start the sprint to update board");
       return;
     }
+
     if (currentSprint.status === "COMPLETED") {
       toast.warning("Cannot update board after sprint end");
       return;
     }
+
     const { destination, source } = result;
 
-    if (!destination) {
-      return;
-    }
+    if (!destination) return;
 
+    // If no movement, do nothing
     if (
       destination.droppableId === source.droppableId &&
       destination.index === source.index
@@ -92,55 +110,40 @@ export default function SprintBoard({ sprints, projectId, orgId }) {
 
     const newOrderedData = [...issues];
 
-    // source and destination list
+    // Separate source/destination lists
     const sourceList = newOrderedData.filter(
-      (list) => list.status === source.droppableId
+      (item) => item.status === source.droppableId
     );
-
     const destinationList = newOrderedData.filter(
-      (list) => list.status === destination.droppableId
+      (item) => item.status === destination.droppableId
     );
 
     if (source.droppableId === destination.droppableId) {
-      const reorderedCards = reorder(
-        sourceList,
-        source.index,
-        destination.index
-      );
-
-      reorderedCards.forEach((card, i) => {
-        card.order = i;
-      });
+      // Reordering within the same list
+      const reorderedCards = reorder(sourceList, source.index, destination.index);
+      reorderedCards.forEach((card, i) => (card.order = i));
     } else {
-      // remove card from the source list
+      // Moving between lists
       const [movedCard] = sourceList.splice(source.index, 1);
-
-      // assign the new list id to the moved card
       movedCard.status = destination.droppableId;
-
-      // add new card to the destination list
       destinationList.splice(destination.index, 0, movedCard);
 
-      sourceList.forEach((card, i) => {
-        card.order = i;
-      });
-
-      // update the order for each card in destination list
-      destinationList.forEach((card, i) => {
-        card.order = i;
-      });
+      // Reassign order indexes
+      sourceList.forEach((card, i) => (card.order = i));
+      destinationList.forEach((card, i) => (card.order = i));
     }
 
+    // Combine and sort issues
     const sortedIssues = newOrderedData.sort((a, b) => a.order - b.order);
-    setIssues(newOrderedData, sortedIssues);
-
-    updateIssueOrderFn(sortedIssues);
+    setIssues(newOrderedData, sortedIssues); // Optimistic UI update
+    updateIssueOrderFn(sortedIssues); // Sync with backend
   };
 
   if (issuesError) return <div>Error loading issues</div>;
 
   return (
     <div className="flex flex-col">
+      {/* Sprint manager (sprint switcher, start/end buttons) */}
       <SprintManager
         sprint={currentSprint}
         setSprint={setCurrentSprint}
@@ -148,10 +151,12 @@ export default function SprintBoard({ sprints, projectId, orgId }) {
         projectId={projectId}
       />
 
+      {/* Filters shown when issues are loaded */}
       {issues && !issuesLoading && (
         <BoardFilters issues={issues} onFilterChange={handleFilterChange} />
       )}
 
+      {/* Error and loading UI */}
       {updateIssuesError && (
         <p className="text-red-500 mt-2">{updateIssuesError.message}</p>
       )}
@@ -159,6 +164,7 @@ export default function SprintBoard({ sprints, projectId, orgId }) {
         <BarLoader className="mt-4" width={"100%"} color="#36d7b7" />
       )}
 
+      {/* Board UI */}
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 bg-slate-900 p-4 rounded-lg">
           {statuses.map((column) => (
@@ -169,9 +175,12 @@ export default function SprintBoard({ sprints, projectId, orgId }) {
                   ref={provided.innerRef}
                   className="space-y-2"
                 >
+                  {/* Column title */}
                   <h3 className="font-semibold text-white mb-2 text-center">
                     {column.name}
                   </h3>
+
+                  {/* Issue cards */}
                   {filteredIssues
                     ?.filter((issue) => issue.status === column.key)
                     .map((issue, index) => (
@@ -191,11 +200,8 @@ export default function SprintBoard({ sprints, projectId, orgId }) {
                               issue={issue}
                               onDelete={() => fetchIssues(currentSprint.id)}
                               onUpdate={(updated) =>
-                                setIssues((issues) =>
-                                  issues.map((issue) => {
-                                    if (issue.id === updated.id) return updated;
-                                    return issue;
-                                  })
+                                setIssues((prev) =>
+                                  prev.map((i) => (i.id === updated.id ? updated : i))
                                 )
                               }
                             />
@@ -204,6 +210,8 @@ export default function SprintBoard({ sprints, projectId, orgId }) {
                       </Draggable>
                     ))}
                   {provided.placeholder}
+
+                  {/* Add issue button (only in TODO & not in completed sprints) */}
                   {column.key === "TODO" &&
                     currentSprint.status !== "COMPLETED" && (
                       <Button
@@ -222,6 +230,7 @@ export default function SprintBoard({ sprints, projectId, orgId }) {
         </div>
       </DragDropContext>
 
+      {/* Drawer for issue creation */}
       <IssueCreationDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
